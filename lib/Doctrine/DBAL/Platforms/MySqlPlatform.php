@@ -583,7 +583,10 @@ class MySqlPlatform extends AbstractPlatform
 
         if ( ! $this->onSchemaAlterTable($diff, $tableSql)) {
             if (count($queryParts) > 0) {
-                $sql[] = 'ALTER TABLE ' . $diff->name . ' ' . implode(", ", $queryParts);
+                $tableName = $diff->fromTable instanceof Table
+                    ? $diff->fromTable->getQuotedName($this)
+                    : $diff->name;
+                $sql[] = 'ALTER TABLE ' . $tableName . ' ' . implode(", ", $queryParts);
             }
             $sql = array_merge(
                 $this->getPreAlterTableIndexForeignKeySQL($diff),
@@ -601,7 +604,7 @@ class MySqlPlatform extends AbstractPlatform
     protected function getPreAlterTableIndexForeignKeySQL(TableDiff $diff)
     {
         $sql = array();
-        $table = $diff->name;
+        $table = $diff->fromTable instanceof Table ? $diff->fromTable : $diff->name;
 
         foreach ($diff->removedIndexes as $remKey => $remIndex) {
             // Dropping primary keys requires to unset autoincrement attribute on the particular column first.
